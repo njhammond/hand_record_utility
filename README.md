@@ -1,4 +1,4 @@
-HandRecordUtility
+Hand Record Utility
 ==
 
 Utility for hand records, primarily for use in Bridge. Can be applied to other games with 4x13 card hands.
@@ -13,16 +13,17 @@ Install
 To install
 
     git clone https://github.com/nicolas.hammond/hand_record_utility
-		bundle install
+    bundle install
 
 Test
 ==
 
 To test 
 
-rake
+    rake
 
-There are standalone tests in the ```./standalone_tests``` directory.
+There are also standalone tests in the ```./standalone_tests``` directory.
+These contain some of the debug code. Use these for code examples.
 
 Given a unique number, either use the debug tools in this code to display it,
 or use Thomas Andrews' web site, 
@@ -50,9 +51,9 @@ Board is a hash with elements, :north, :east, :south, :west.
 There are some debug options to pretty print the data.
 
 ```
-		# Print a short form of a board
+    # Print a short form of a board
     HandRecordUtility.debug_board_short_form(board)
-		# Print a hand record of a board
+    # Print a hand record of a board
     HandRecordUtility.debug_board(board)
 ```
 
@@ -64,7 +65,7 @@ Externally the range is 1..D, within the code the range is 0..D-1.
 Definitions
 ==
 
-A hand has 13 cards. A hand record has 4 hands. We try to avoid using the term 'board' as this refers to a hand record with a board number.
+A hand has 13 cards. A hand record has 4 hands. 
 
 There are 53,644,737,765,488,792,839,237,440,000 possible bridge deals.
 
@@ -89,7 +90,7 @@ Main developer, Nicolas Hammond.
 License
 ==
 
-This project uses MIT-LICENSE.
+This project uses the MIT-LICENSE.
 
-Please make sure to credit Richard Pavlicek.
+Please make sure to credit Richard Pavlicek as original author of the algorithm as well.
 
