@@ -13,6 +13,7 @@ Install
 To install
 
     git clone https://github.com/njhammond/hand_record_utility
+    cd hand_record_utility
     bundle install
 
 Test
@@ -22,8 +23,7 @@ To test
 
     rake
 
-There are also standalone tests in the ```./standalone_tests``` directory.
-These contain some of the debug code. Use these for code examples.
+Expect to see 0 failures. There may be some diagnostics about invalid numbers, this is all part of the test. There are also standalone tests in the ```./standalone_tests``` directory.  These contain some of the debug code. Use these for code examples.
 
 Given a unique number, either use the debug tools in this code to display it,
 or use Thomas Andrews' web site, 
