@@ -12,7 +12,7 @@ Install
 
 To install
 
-    git clone https://github.com/nicolas.hammond/hand_record_utility
+    git clone https://github.com/njhammond/hand_record_utility
     bundle install
 
 Test
