@@ -13,7 +13,7 @@ class HandRecordUtility < Test::Unit::TestCase
     board[:south] = "DAKQJT98765432"
     board[:west]  = "CAKQJT98765432"
 
-    i = HandRecordUtility.to_andrews(board)
+    i = HandRecordUtility.to_andrews_number(board)
     puts "i=#{i}"
 
     board[:north] = "SAKQJT98765432"
@@ -21,7 +21,7 @@ class HandRecordUtility < Test::Unit::TestCase
     board[:south] = "HAKQJT98765432"
     board[:west]  = "CAKQJT98765432"
 
-    i = HandRecordUtility.to_andrews(board)
+    i = HandRecordUtility.to_andrews_number(board)
     puts "i=#{i}"
 
   end
