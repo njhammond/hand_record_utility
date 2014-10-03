@@ -28,8 +28,10 @@ Rake::TestTask.new(:test) do |t|
   t.verbose = false
 end
 
-RSpec::Core::RakeTask.new
+RSpec::Core::RakeTask.new(:spec) do |config|
+  # Need to fix. Get errors about pattern.
+  config.pattern = "spec/*_spec.rb"
+end
 
 #task default: :test
 task :default => :spec
-
