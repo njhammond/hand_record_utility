@@ -439,6 +439,191 @@ module HandRecordUtility
     return i + 1
   end
 
+	##############
+	# Andrews code
+	##############
+  # Convert board to Andrews number.
+  # http://bridge.thomasoandrews.com/impossible/algorithm.html
+
+  def self.pavlicek_array_to_andrews_sequences(pav_array)
+    sequences = Array.new( 3 ) { Array.new( 13, -1 ) }
+    (0..2).each do |j|    
+      count = 0
+      loc = 0
+      (0..51).each do |i|
+        if (j == pav_array[i]) then
+          sequences[j][loc] = count
+          loc = loc + 1
+        end
+        if (j <= pav_array[i]) then
+          count = count + 1
+        end
+      end
+    end
+    sequences
+  end
+
+  def self.encode_increasing_sequence(sequence)
+    sum = 0
+    sequence.each_with_index do |val,index|
+      if val > 0 then
+#        puts "val=#{val}, index=#{index}"
+        # Next line will fail if val=index.
+        sum = sum + Combinatorics::Choose.C(val,index+1)
+      end
+    end
+    sum
+  end
+
+  def self.to_andrews_number(board)
+    pav_array = board_to_pavlicek_array(board, PAVLICEK_SUITED)
+    sequences = pavlicek_array_to_andrews_sequences(pav_array)
+
+    seqN = encode_increasing_sequence(sequences[0])
+    seqE = encode_increasing_sequence(sequences[1])
+    seqS = encode_increasing_sequence(sequences[2])
+
+		# Need to add 1. Internally we use 0..D-1, externally 1..D
+    i =  seqS + S_MAX * (seqE + (E_MAX * seqN)) + 1
+		return i
+  end
+
+  def self.decode_to_increasing_sequence(index)
+    length = 13
+    result = Array.new( length, -1 )
+
+    13.downto(1) do |i|
+      last_value = 0
+      num = i
+      next_value = Combinatorics::Choose.C(num,i)
+      while index >= next_value do
+        num += 1
+        last_value=next_value
+        next_value = Combinatorics::Choose.C(num,i)
+      end
+      result[i-1] = num-1
+      index = index - last_value
+    end
+    result
+  end
+
+  # Convert from an Andrews number to a board
+  def self.andrews_number_to_board(number)
+    routine_name = "andrews_number_to_board"
+
+    # Error check
+    if (number <= 0) then
+      puts "Error in #{routine_name}. Invalid number #{number}. Must be 1 or higher."
+      return nil
+    end
+
+    if (number > HandRecordUtility::D) then
+      puts "Error in #{routine_name}. Invalid number #{number} is too big."
+      return nil
+    end
+
+		# Need to subtract 1 because the UI is 1..D, code is 0..D-1
+		number = number - 1
+
+    # Using variable names from http://www.rpbridge.net/7z68.htm
+    s_index  = number % S_MAX
+    quotient = number / S_MAX
+
+    e_index = quotient % E_MAX
+    n_index = quotient / E_MAX
+
+    north_sequence = decode_to_increasing_sequence(n_index)
+    east_sequence  = decode_to_increasing_sequence(e_index)
+    south_sequence = decode_to_increasing_sequence(s_index)
+
+    # initialize all cards to west since anything missing must be there!
+
+    pav_array = Array.new(52,DIR_W)
+
+    [[north_sequence,DIR_N], 
+     [east_sequence,DIR_E],
+     [south_sequence,DIR_S]].each do |sequence,direction|
+      
+      hand_loc = 0
+      sequence_loc = 0
+      pav_array.each_with_index do |val,idx|
+        if (val == DIR_W) then
+          if (hand_loc == sequence[sequence_loc]) then
+            pav_array[idx] = direction
+            sequence_loc = sequence_loc + 1
+          end
+          hand_loc = hand_loc + 1
+        end
+      end
+    end
+
+    nsew = Array.new(4) { Array.new(4) { Array.new } }
+    pav_array.each_with_index do |dir,idx|
+    # The documentation has the following code
+#      rank = idx / 4
+#      suit = idx % 4
+    # The implementation (andrews/impossible) uses the following code
+			suit = idx / 13
+			rank = idx % 13
+      nsew[dir][suit].push(rank)
+    end
+
+    pavlicek_arrays_to_board(nsew)
+  end
+
+	##########
+	# Hex code
+	##########
+  # Given a number, convert to a 24 character hex string.
+  # A number should be a maximum of 96 bits.
+  # A hex character has 4 bits, so should be a maximum of 24 characters.
+  # This routine does no error checking on the input.
+  def self.number_to_hex(i)
+    i.to_s(16)
+  end
+
+  # From hex back to int
+  # This routine does no error checking on the input.
+  def self.hex_to_number(s)
+    s.to_i(16)
+  end
+
+	##########
+	# Base 64 code
+	##########
+  # From number to character string
+  # This routine does no error checking on the input.
+  def self.number_to_string_64(i)
+    return "0" if (i == 0)
+    s = ""
+    while (i > 0)
+      digit = i % 64
+      s = CHAR_TO_BITS[digit] + s
+      i = i / 64
+    end
+    s
+  end
+
+  # Converts the string to an int.
+  # This routine does no error checking on the input.
+  def self.string_64_to_number(s)
+    i = 0
+    return i if (s.nil? || s.empty?)
+    s.each_char do |c|
+      chr = c.ord - 48
+      # Validity check
+      return -1 if ((chr < 0) || (chr > 77))
+      n = BITS_TO_CHAR[chr]
+      # Validity check
+      return -1 if (n == -1)
+      i = (i * 64) + n
+    end
+    i
+  end
+
+	##########
+	# Debug code
+	##########
   # Debug utility to print values of the pav_array
   def self.debug_pavlicek_array(pav_array)
     (0..4).each do |tens|
@@ -512,168 +697,5 @@ module HandRecordUtility
     return s
   end
 
-  # Convert board to Andrews number.
-  # http://bridge.thomasoandrews.com/impossible/algorithm.html
-
-  def self.pavlicek_array_to_andrews_sequences(pav_array)
-    sequences = Array.new( 3 ) { Array.new( 13, -1 ) }
-    (0..2).each do |j|    
-      count = 0
-      loc = 0
-      (0..51).each do |i|
-        if (j == pav_array[i]) then
-          sequences[j][loc] = count
-          loc = loc + 1
-        end
-        if (j <= pav_array[i]) then
-          count = count + 1
-        end
-      end
-    end
-    sequences
-  end
-
-  def self.encode_increasing_sequence(sequence)
-    sum = 0
-    sequence.each_with_index do |val,index|
-      if val > 0 then
-#        puts "val=#{val}, index=#{index}"
-        # Next line will fail if val=index.
-        sum = sum + Combinatorics::Choose.C(val,index+1)
-      end
-    end
-    sum
-  end
-
-  def self.to_andrews_number(board)
-    pav_array = board_to_pavlicek_array(board, PAVLICEK_RANKED)
-    sequences = pavlicek_array_to_andrews_sequences(pav_array)
-
-    seqN = encode_increasing_sequence(sequences[0])
-    seqE = encode_increasing_sequence(sequences[1])
-    seqS = encode_increasing_sequence(sequences[2])
-
-    return seqS + S_MAX * (seqE + (E_MAX * seqN))
-  end
-
-  def self.decode_to_increasing_sequence(index)
-    length = 13
-    result = Array.new( length, -1 )
-
-    13.downto(1) do |i|
-      last_value = 0
-      num = i
-      next_value = Combinatorics::Choose.C(num,i)
-      while index >= next_value do
-        num += 1
-        last_value=next_value
-        next_value = Combinatorics::Choose.C(num,i)
-      end
-      result[i-1] = num-1
-      index = index - last_value
-    end
-    result
-  end
-
-  # Convert from an Andrews number to a board
-  def self.andrews_number_to_board(number)
-    routine_name = "andrews_number_to_board"
-
-    # Error check
-    if (number <= 0) then
-      puts "Error in #{routine_name}. Invalid number #{number}. Must be 1 or higher."
-      return nil
-    end
-
-    if (number > HandRecordUtility::D) then
-      puts "Error in #{routine_name}. Invalid number #{number} is too big."
-      return nil
-    end
-
-    # Using variable names from http://www.rpbridge.net/7z68.htm
-    s_index  = number % S_MAX
-    quotient = number / S_MAX
-
-    e_index = quotient % E_MAX
-    n_index = quotient / E_MAX
-
-    north_sequence = decode_to_increasing_sequence(n_index)
-    east_sequence  = decode_to_increasing_sequence(e_index)
-    south_sequence = decode_to_increasing_sequence(s_index)
-
-    # initialize all cards to west since anything missing must be there!
-
-    pav_array = Array.new(52,DIR_W)
-
-    [[north_sequence,DIR_N], 
-     [east_sequence,DIR_E],
-     [south_sequence,DIR_S]].each do |sequence,direction|
-      
-      hand_loc = 0
-      sequence_loc = 0
-      pav_array.each_with_index do |val,idx|
-        if (val == DIR_W) then
-          if (hand_loc == sequence[sequence_loc]) then
-            pav_array[idx] = direction
-            sequence_loc = sequence_loc + 1
-          end
-          hand_loc = hand_loc + 1
-        end
-      end
-    end
-
-    nsew = Array.new(4) { Array.new(4) { Array.new } }
-    pav_array.each_with_index do |dir,idx|
-      rank = idx / 4
-      suit = idx % 4
-      nsew[dir][suit].push(rank)
-    end
-
-    pavlicek_arrays_to_board(nsew)
-  end
-
-  # Given a number, convert to a 24 character hex string.
-  # A number should be a maximum of 96 bits.
-  # A hex character has 4 bits, so should be a maximum of 24 characters.
-  # This routine does no error checking on the input.
-  def self.number_to_hex(i)
-    i.to_s(16)
-  end
-
-  # From hex back to int
-  # This routine does no error checking on the input.
-  def self.hex_to_number(s)
-    s.to_i(16)
-  end
-
-  # From number to character string
-  # This routine does no error checking on the input.
-  def self.number_to_string_64(i)
-    return "0" if (i == 0)
-    s = ""
-    while (i > 0)
-      digit = i % 64
-      s = CHAR_TO_BITS[digit] + s
-      i = i / 64
-    end
-    s
-  end
-
-  # Converts the string to an int.
-  # This routine does no error checking on the input.
-  def self.string_64_to_number(s)
-    i = 0
-    return i if (s.nil? || s.empty?)
-    s.each_char do |c|
-      chr = c.ord - 48
-      # Validity check
-      return -1 if ((chr < 0) || (chr > 77))
-      n = BITS_TO_CHAR[chr]
-      # Validity check
-      return -1 if (n == -1)
-      i = (i * 64) + n
-    end
-    i
-  end
 
 end
