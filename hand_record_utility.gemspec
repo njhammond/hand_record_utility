@@ -19,7 +19,8 @@ See Thomas Andrews' web site at http://bridge.thomasoandrews.com/impossible/bin/
 "  
   s.license     = "MIT"
 
-  s.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.rdoc"]
+  s.files = Dir["{lib}/**/*", "AUTHORS", "Gemfile", "Gemfile.lock", "MIT-LICENSE", 
+    "Rakefile", "README.md", "spec/*rb"]
   # Generic test files.
   # More under ./standalone_tests
 #  s.test_files = Dir["test/**/*"]
