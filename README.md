@@ -5,7 +5,7 @@ Utility for hand records, primarily for use in Bridge. Can be applied to other g
 
 This code takes a hand record (4 hands from a Bridge table) and converts it to a unique number using Richard Pavlicek's alogrithm. See http://www.rpbridge.net/7z68.htm for details on Pavlicek's algorithm.
 
-Eventually we are hoping that this can be extended to include other algorithms, e.g. Thomas Andrews. See http://bridge.thomasoandrews.com/impossible/
+Being extended to include other algorithms, e.g. Thomas Andrews. See http://bridge.thomasoandrews.com/impossible/
 
 Install
 ==
@@ -57,6 +57,19 @@ There are some debug options to pretty print the data.
     HandRecordUtility.debug_board(board)
 ```
 
+To do the same for Andrews numbers
+
+```
+    i = rand(HandRecordUtility::D) + 1
+    board = HandRecordUtility.andrews_number_to_board(i)
+    HandRecordUtility.to_andrews_number(board)
+    # Print a short form of a board
+    HandRecordUtility.debug_board_short_form(board)
+    # Print a hand record of a board
+    HandRecordUtility.debug_board(board)
+```
+
+
 Notes
 ==
 
@@ -84,7 +97,7 @@ The original purpose for putting this code out in the public domain is to try to
 Developers
 ==
 
-Main developer, Nicolas Hammond.
+See AUTHORS for list of developers.
 
 
 License
@@ -93,4 +106,6 @@ License
 This project uses the MIT-LICENSE.
 
 Please make sure to credit Richard Pavlicek as original author of the algorithm as well.
+
+Please make sure to credit Thomas Andrews as original author of his algorithm.
 
