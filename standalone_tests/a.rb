@@ -2,7 +2,7 @@ require './lib/hand_record_utility.rb'
 
 output_debug = 0
 
-def test_a_number(i)
+def test_a_pavlicek_number(i)
   board = HandRecordUtility.pavlicek_number_to_board(i)
   
   if (board.nil?) then
@@ -18,14 +18,14 @@ def test_a_number(i)
   end
 end
 
-test_a_number(1)
-test_a_number(1000)
-test_a_number(1234567890123456789012345678)
-test_a_number(HandRecordUtility::D)
+test_a_pavlicek_number(1)
+test_a_pavlicek_number(1000)
+test_a_pavlicek_number(1234567890123456789012345678)
+test_a_pavlicek_number(HandRecordUtility::D)
 # Expect failure
 puts "Testing out of bounds. Both should fail."
-test_a_number(0)
-test_a_number(HandRecordUtility::D + 1)
+test_a_pavlicek_number(0)
+test_a_pavlicek_number(HandRecordUtility::D + 1)
 
 @board = Hash.new
 @board[:north] = "SAKQJT98765432HDC"
