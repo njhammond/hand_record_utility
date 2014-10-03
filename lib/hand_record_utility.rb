@@ -499,6 +499,8 @@ module HandRecordUtility
     sum = 0
     sequence.each_with_index do |val,index|
       if val > 0 then
+#        puts "val=#{val}, index=#{index}"
+        # Next line will fail if val=index.
         sum = sum + Combinatorics::Choose.C(val,index+1)
       end
     end
@@ -535,6 +537,7 @@ module HandRecordUtility
     result
   end
 
+  # Convert from an Andrews number to a board
   def self.andrews_number_to_board(number)
 
     s_index = number % SMax
