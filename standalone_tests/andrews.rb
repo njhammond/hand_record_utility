@@ -15,6 +15,7 @@ i = HandRecordUtility.to_andrews_number(@board)
 # 
 
 # This hand above should generate the number 1
+# Currently generates 182993471349199361441818250290
 puts "i=#{i}"
 # 
 board = HandRecordUtility.andrews_number_to_board(i)
