@@ -29,11 +29,10 @@ HandRecordUtility.debug_board(board)
 # The above works.
 # The next line will cause a fault
 
-# j = HandRecordUtility.to_andrews_number(@board)
-# if (i != j) then
-#   puts "Error. Failed to convert from number<->board i=#{i} j=#{j}".
-# end
-# puts "j=#{j}"
+j = HandRecordUtility.to_andrews_number(@board)
+if (i != j) then
+  puts "Error. Failed to convert from number<->board i=#{i} j=#{j}".
+end
 
 # Use a random 29 digit number for generic board
 i = 12345678901234567890123456789
@@ -55,7 +54,14 @@ HandRecordUtility.debug_board(board)
 #         D: AKT654
 #         C: K7
 
-j = HandRecordUtility.to_andrews_number(board)
-if (i != j) then
-  puts "Error. Failed to convert from number<->board i=#{i} j=#{j}"
-end
+#j = HandRecordUtility.to_andrews_number(board)
+#if (i != j) then
+#  puts "Error. Failed to convert from number<->board i=#{i} j=#{j}"
+#end
+
+# Also test the maximum
+i = HandRecordUtility::D
+board = HandRecordUtility.andrews_number_to_board(i)
+HandRecordUtility.debug_board_short_form(board) 
+HandRecordUtility.debug_board(board) 
+
