@@ -17,6 +17,8 @@
 # We provide routines to go both ways, from a unique number to a hand record,
 # from a hand record to a unique number.
 
+require 'combinatorics/choose'
+
 module HandRecordUtility
 
   # Constants. D is a 29 digit number
@@ -166,7 +168,11 @@ module HandRecordUtility
       puts "#{routine_name}: end. n=#{n} e=#{e} s=#{s} w=#{w}"
     end
 
-    # We now have 4 arrays.
+    return pavlicek_arrays_to_board(hands)
+  end
+
+  # pavlicek_arrays_to_board takes four arrays and returns the entire board.
+  def self.pavlicek_arrays_to_board(hands)
     board = Hash.new
     board[:north] = pavlicek_array_to_hand(hands[DIR_N])
     board[:east] = pavlicek_array_to_hand(hands[DIR_E])
@@ -174,6 +180,7 @@ module HandRecordUtility
     board[:west] = pavlicek_array_to_hand(hands[DIR_W])
     return board
   end
+
 
   # pav_hand is an array of cards
   # Returns a 17 char string with the hand record.
@@ -207,7 +214,7 @@ module HandRecordUtility
         c = 14 - card
         s = s + c.to_s
       else
-        puts "Invalid valid in #{routine_name}. card=#{card}"
+        puts "Invalid value in #{routine_name}. card=#{card}"
         # Error
       end
     end
@@ -464,13 +471,111 @@ module HandRecordUtility
     return s
   end
 
-  # This does the work for the Andrews number.
-  # Code is 2BD.
-  # Leaving it for others to write this code.
-  # This is intended as an Open Source project!
-#  def self.to_andrews(board)
-  # The number is 
-#    return 1
-#  end
+  # Convert board to Andrews number.
+  # http://bridge.thomasoandrews.com/impossible/algorithm.html
+
+  SMax = Combinatorics::Choose.C(26,13)
+  EMax = Combinatorics::Choose.C(39,13)
+
+  def self.pavlicek_array_to_andrews_sequences(pav_array)
+    sequences = Array.new( 3 ) { Array.new( 13, -1 ) }
+    (0..2).each do |j|    
+      count = 0
+      loc = 0
+      (0..51).each do |i|
+        if (j == pav_array[i]) then
+          sequences[j][loc] = count
+          loc = loc + 1
+        end
+        if (j <= pav_array[i]) then
+          count = count + 1
+        end
+      end
+    end
+    sequences
+  end
+
+  def self.encode_increasing_sequence(sequence)
+    sum = 0
+    sequence.each_with_index do |val,index|
+      if val > 0 then
+        sum = sum + Combinatorics::Choose.C(val,index+1)
+      end
+    end
+    sum
+  end
+
+  def self.to_andrews_number(board)
+    pav_array = board_to_pavlicek_array(board, PAVLICEK_RANKED)
+    sequences = pavlicek_array_to_andrews_sequences(pav_array)
+
+    seqN = encode_increasing_sequence(sequences[0])
+    seqE = encode_increasing_sequence(sequences[1])
+    seqS = encode_increasing_sequence(sequences[2])
+
+    return seqS + SMax * (seqE + EMax*seqN)
+  end
+
+  def self.decode_to_increasing_sequence(index)
+    length = 13
+    result = Array.new( length, -1 )
+
+    13.downto(1) do |i|
+      last_value = 0
+      num = i
+      next_value = Combinatorics::Choose.C(num,i)
+      while index >= next_value do
+        num += 1
+        last_value=next_value
+        next_value = Combinatorics::Choose.C(num,i)
+      end
+      result[i-1] = num-1
+      index = index - last_value
+    end
+    result
+  end
+
+  def self.andrews_number_to_board(number)
+
+    s_index = number % SMax
+    quotient = number / SMax
+
+    e_index = quotient % EMax
+    n_index = quotient / EMax
+
+    north_sequence = decode_to_increasing_sequence(n_index)
+    east_sequence = decode_to_increasing_sequence(e_index)
+    south_sequence = decode_to_increasing_sequence(s_index)
+
+    # initialize all cards to west since anything missing must be there!
+
+    pav_array = Array.new(52,DIR_W)
+
+    [[north_sequence,DIR_N], 
+     [east_sequence,DIR_E],
+     [south_sequence,DIR_S]].each do |sequence,direction|
+      
+      hand_loc = 0
+      sequence_loc = 0
+      pav_array.each_with_index do |val,idx|
+        if (val == DIR_W) then
+          if (hand_loc == sequence[sequence_loc]) then
+            pav_array[idx] = direction
+            sequence_loc = sequence_loc + 1
+          end
+          hand_loc = hand_loc + 1
+        end
+      end
+    end
+
+    nsew = Array.new(4) { Array.new(4) { Array.new } }
+    pav_array.each_with_index do |dir,idx|
+      rank = idx / 4
+      suit = idx % 4
+      nsew[dir][suit].push(rank)
+    end
+
+    pavlicek_arrays_to_board(nsew)
+  end
 
 end
