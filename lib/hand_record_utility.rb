@@ -1,22 +1,41 @@
+# Provides a set of utilities for manipulating hand records.
+# Primarily for use for Bridge, the card game.
+#
 # A hand record/board contains four hands: ":north", ":south", ":west", ":east"
 # Each hand is a string[17] in the format
 # example hand="SKQH5432DAQJCT954"
-# where T=Ten
+# where T=Ten (we rarely use 10 when working on internal strings).
+# Because of the implementation you can remove suits which are not used, e.g.
+# example hand="SAKQJT9H8765432" 
+# but this is discouraged.
 #
 # This gem assumes that the hand record and hand are well formed.
 # Little/no error checking on input values.
 #
 # See http://www.rpbridge.net/7z68.htm for Pavlicek algorithm.
-# Richard has given his permission to use the algorithm but with proper attribution.
+# Richard has given his permission to use the algorithm with proper attribution.
 #
-# This algorithm uses 0..D-1, for a UI we use 1..D
+# This algorithm uses 0..D-1 internally, for a UI and externally we use 1..D
 #
 # See bridge.thomasandrews.com/impossible
 # for a web site that displays Pavlicek hands.
 #
 # We provide routines to go both ways, from a unique number to a hand record,
 # from a hand record to a unique number.
+#
+# Code now supports Andrews numbers as well.
+#
+# Code added to convert from a large number (up to 29 digits, see D below) 
+# to hex (up to 24 digits) and to base 64 (up to 16 characters). 
+# The latter has a translation algorithm to ensure that the 64 characters are 
+# regular ASCII characters.
+# Also can convert the other way.
+# This shortens the number for transmission, e.g. URLs
+#
+# Code best viewed with a tab stop of 2.
+# 345678901234567890123456789012345678901234567890123456789012345678901234567890
 
+# Used for some factorial math
 require 'combinatorics/choose'
 
 module HandRecordUtility
@@ -37,14 +56,33 @@ module HandRecordUtility
     "West",
   ]
 
+  # 64 characters so can map 
+  CHAR_TO_BITS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ{}"
+  # Given the ascii characters, map to a number. Subtract 48 from the char
+  BITS_TO_CHAR = [
+     0,  1,  2,  3,  4,  5,  6,  7,  8,  9, # 0123456789
+    -1, -1, -1, -1, -1, -1, -1, 36, 37, 38, # :;<=>?@ABC
+    39, 40, 41, 42, 43, 44, 45, 46, 47, 48, # DEFGHIJKLM
+    49, 50, 51, 52, 53, 54, 55, 56, 57, 58, # NOPQRSTUVW
+    59, 60, 61, -1, -1, -1, -1, -1, -1, 10, # XYZ[/]^_'a
+    11, 12, 13, 14, 15, 16, 17, 18, 19, 20, # bcdefghijk
+    21, 22, 23, 24, 25, 26, 27, 28, 29, 30, # lmnopqrstu
+    31, 32, 33, 34, 35, 62, -1, 63          # vwxyz{|}
+  ]
+
   # Using the Ranked order, the order of cards is AS, AH, AD, AC
   # Using the Suited order, the order of cards is AS, KS, QS, ...
   # Always used Ranked
   PAVLICEK_RANKED = 1
   PAVLICEK_SUITED = 2
 
+  # Used in Andrews numbers
+  S_MAX = Combinatorics::Choose.C(26,13)
+  E_MAX = Combinatorics::Choose.C(39,13)
+
   # Default is suited
-  # Pavlicek web site uses the ranked order, Andrews reference is to the suited order
+  # Pavlicek web site uses the ranked order, Andrews reference is to the suited 
+  # order.
   # Using Andrews web site to generate the numbers, the suited is preferred.
   # The number is assumed to be 1..D, however the algorithm on Pavlicek's page
   # is 0..D-1. Therefore in a later routine we subtract 1.
@@ -62,6 +100,7 @@ module HandRecordUtility
     pavlicek_ranked_or_suited_number_to_board(number, PAVLICEK_SUITED)
   end
 
+  # Algorithm:
   # 1. N=E=S=W=13; C=52; K=D
   # 2. X=K*N/C; If I < X then N=N-1, go to 6
   # 3. I=I-X; X=K*E/C; If I < X then E=E-1, go to 6
@@ -70,9 +109,10 @@ module HandRecordUtility
   # 6. K=X; C=C-1, loop if not zero to 2
   # Returns a board
   def self.pavlicek_ranked_or_suited_number_to_board(number, ranked_or_suited)
-    # Common theme to help with debugging. Define routine name to help with
-    # debug. A short routine name. Use a variable to turn debug on or off in the
-    # code
+    # Common theme to help with debugging. Define routine name for debug code. 
+    # Sometimes also define a short routine name. 
+    # Use a variable to turn debug on or off in the code
+    # Similar code through most of this gem
     routine_name = "pavlicek_ranked_or_suited_number_to_board"
     short_routine_name = "prsntb"
     debug_routine = 0
@@ -175,9 +215,9 @@ module HandRecordUtility
   def self.pavlicek_arrays_to_board(hands)
     board = Hash.new
     board[:north] = pavlicek_array_to_hand(hands[DIR_N])
-    board[:east] = pavlicek_array_to_hand(hands[DIR_E])
+    board[:east]  = pavlicek_array_to_hand(hands[DIR_E])
     board[:south] = pavlicek_array_to_hand(hands[DIR_S])
-    board[:west] = pavlicek_array_to_hand(hands[DIR_W])
+    board[:west]  = pavlicek_array_to_hand(hands[DIR_W])
     return board
   end
 
@@ -185,7 +225,7 @@ module HandRecordUtility
   # pav_hand is an array of cards
   # Returns a 17 char string with the hand record.
   def self.pavlicek_array_to_hand(pav_hand_array)
-    s = "S" + pavlicek_hand_array_to_suit(pav_hand_array[0])
+    s =     "S" + pavlicek_hand_array_to_suit(pav_hand_array[0])
     s = s + "H" + pavlicek_hand_array_to_suit(pav_hand_array[1])
     s = s + "D" + pavlicek_hand_array_to_suit(pav_hand_array[2])
     s = s + "C" + pavlicek_hand_array_to_suit(pav_hand_array[3])
@@ -381,7 +421,7 @@ module HandRecordUtility
               w = w - 1
             else
               # Invalid card
-              puts "Invalid direction in HandRecordUtility. count=#{count} value=#{hand_has_card}"
+              puts "Invalid direction in HandRecordUtility. direction=#{hand_has_card} count=#{count} value=#{hand_has_card}"
             end
           end
         end
@@ -420,11 +460,12 @@ module HandRecordUtility
     debug_board_short_form_suit("W", board[:west])
   end
 
+  # Helper routine to print a hand in short form
   def self.debug_board_short_form_suit(hand_name, hand)
     puts " #{hand_name}: #{hand}"
   end
 
-  # Print out in format normally associated with cards
+  # Print out in format normally associated with bridge journalism
   def self.debug_board(board)
     debug_board_ns(board[:north])
     sw = debug_board_hand_suit(board[:west], "S")
@@ -474,9 +515,6 @@ module HandRecordUtility
   # Convert board to Andrews number.
   # http://bridge.thomasoandrews.com/impossible/algorithm.html
 
-  SMax = Combinatorics::Choose.C(26,13)
-  EMax = Combinatorics::Choose.C(39,13)
-
   def self.pavlicek_array_to_andrews_sequences(pav_array)
     sequences = Array.new( 3 ) { Array.new( 13, -1 ) }
     (0..2).each do |j|    
@@ -515,7 +553,7 @@ module HandRecordUtility
     seqE = encode_increasing_sequence(sequences[1])
     seqS = encode_increasing_sequence(sequences[2])
 
-    return seqS + SMax * (seqE + EMax*seqN)
+    return seqS + S_MAX * (seqE + (E_MAX * seqN))
   end
 
   def self.decode_to_increasing_sequence(index)
@@ -539,15 +577,28 @@ module HandRecordUtility
 
   # Convert from an Andrews number to a board
   def self.andrews_number_to_board(number)
+    routine_name = "andrews_number_to_board"
 
-    s_index = number % SMax
-    quotient = number / SMax
+    # Error check
+    if (number <= 0) then
+      puts "Error in #{routine_name}. Invalid number #{number}. Must be 1 or higher."
+      return nil
+    end
 
-    e_index = quotient % EMax
-    n_index = quotient / EMax
+    if (number > HandRecordUtility::D) then
+      puts "Error in #{routine_name}. Invalid number #{number} is too big."
+      return nil
+    end
+
+    # Using variable names from http://www.rpbridge.net/7z68.htm
+    s_index  = number % S_MAX
+    quotient = number / S_MAX
+
+    e_index = quotient % E_MAX
+    n_index = quotient / E_MAX
 
     north_sequence = decode_to_increasing_sequence(n_index)
-    east_sequence = decode_to_increasing_sequence(e_index)
+    east_sequence  = decode_to_increasing_sequence(e_index)
     south_sequence = decode_to_increasing_sequence(s_index)
 
     # initialize all cards to west since anything missing must be there!
@@ -579,6 +630,50 @@ module HandRecordUtility
     end
 
     pavlicek_arrays_to_board(nsew)
+  end
+
+  # Given a number, convert to a 24 character hex string.
+  # A number should be a maximum of 96 bits.
+  # A hex character has 4 bits, so should be a maximum of 24 characters.
+  # This routine does no error checking on the input.
+  def self.number_to_hex(i)
+    i.to_s(16)
+  end
+
+  # From hex back to int
+  # This routine does no error checking on the input.
+  def self.hex_to_number(s)
+    s.to_i(16)
+  end
+
+  # From number to character string
+  # This routine does no error checking on the input.
+  def self.number_to_string_64(i)
+    return "0" if (i == 0)
+    s = ""
+    while (i > 0)
+      digit = i % 64
+      s = CHAR_TO_BITS[digit] + s
+      i = i / 64
+    end
+    s
+  end
+
+  # Converts the string to an int.
+  # This routine does no error checking on the input.
+  def self.string_64_to_number(s)
+    i = 0
+    return i if (s.nil? || s.empty?)
+    s.each_char do |c|
+      chr = c.ord - 48
+      # Validity check
+      return -1 if ((chr < 0) || (chr > 77))
+      n = BITS_TO_CHAR[chr]
+      # Validity check
+      return -1 if (n == -1)
+      i = (i * 64) + n
+    end
+    i
   end
 
 end

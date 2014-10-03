@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    hand_record_utility (1.0.0)
+    hand_record_utility (1.0.2)
 
 GEM
   remote: https://rubygems.org/

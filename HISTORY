@@ -2,6 +2,9 @@ Mon Sep 29, 2014, Version 1.0
 				Initial release
 
 Fri Oct 3, 2014, Version 1.0.1
-				Added code from Greg for Andrews numbers.
+				Greg added code for Andrews numbers.
+
+Fri Oct 3, 2014, Version 1.0.2
+				Nicolas added support for hex and base64.
 
 
