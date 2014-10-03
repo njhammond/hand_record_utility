@@ -31,7 +31,7 @@ HandRecordUtility.debug_board(board)
 
 j = HandRecordUtility.to_andrews_number(@board)
 if (i != j) then
-  puts "Error. Failed to convert from number<->board i=#{i} j=#{j}".
+  puts "Error. Failed to convert from number<->board i=#{i} j=#{j}"
 end
 
 # Use a random 29 digit number for generic board
@@ -64,4 +64,3 @@ i = HandRecordUtility::D
 board = HandRecordUtility.andrews_number_to_board(i)
 HandRecordUtility.debug_board_short_form(board) 
 HandRecordUtility.debug_board(board) 
-
