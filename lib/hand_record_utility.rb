@@ -466,9 +466,7 @@ module HandRecordUtility
   def self.encode_increasing_sequence(sequence)
     sum = 0
     sequence.each_with_index do |val,index|
-      if val > 0 then
-#        puts "val=#{val}, index=#{index}"
-        # Next line will fail if val=index.
+      if val > index then
         sum = sum + Combinatorics::Choose.C(val,index+1)
       end
     end
@@ -559,10 +557,6 @@ module HandRecordUtility
 
     nsew = Array.new(4) { Array.new(4) { Array.new } }
     pav_array.each_with_index do |dir,idx|
-    # The documentation has the following code
-#      rank = idx / 4
-#      suit = idx % 4
-    # The implementation (andrews/impossible) uses the following code
 			suit = idx / 13
 			rank = idx % 13
       nsew[dir][suit].push(rank)
