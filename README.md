@@ -30,6 +30,10 @@ or use Thomas Andrews' web site,
 [http://bridge.thomasoandrews.com/impossible]
 (http://bridge.thomasoandrews.com/impossible).
 
+Use, can also test
+
+    rspec
+
 Usage
 ==
 
