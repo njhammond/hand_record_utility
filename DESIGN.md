@@ -1,6 +1,47 @@
 Design Notes
 ==
 
+
+Internal Data Structures
+==
+
+We use 4 different data strictures:
+
+1. hand_record_number
+===
+
+The hand_record_number is an integer 1..53644737765488792839237440000 that
+represent a unique representation of a bridge hand.
+
+The utility was written to make use of this number.
+
+2. hand string notation
+===
+
+Each hand is a string[17] in the format,
+
+  SKQH5432DAQJCT954
+
+where T=Ten (we rarely use 10 when working on internal strings).
+Because of the implementation you can remove suits which are not used, e.g.
+example hand="SAKQJT9H8765432" 
+but this is discouraged.
+
+3. board
+===
+
+A board contains 4 elements, :north, :east, :south, :west that define a hand.
+
+  board = Hash.new
+  board[:north] = "SAKQJT98765432HDC"
+  board[:east]  = "SHAKQJT98765432DC"
+  board[:south] = "SHDAKQJT98765432C"
+  board[:west]  = "SHDCAKQJT98765432"
+
+We provide routines to go all ways, from a unique number to a hand record,
+# from a hand record to a unique number.
+
+
 DUP Format
 ==
 
