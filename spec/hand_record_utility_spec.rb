@@ -21,6 +21,9 @@ describe HandRecordUtility do
 #    pending "do it"
 #  end
 
+  puts "Expect to see error messages. This is part of the tests. Look for number of failures at end"
+	puts "Number of failures should be 0."
+
   ###################
   # Pavlicek tests
   ###################
@@ -214,6 +217,32 @@ describe HandRecordUtility do
     i = HandRecordUtility::D + 1
     @board = HandRecordUtility.andrews_number_to_board(i)
     expect(@board).to eq(nil)
+  end
+
+#1: SK5HT93DAT98CAKJ8SJHKQJ7654DJCQ652SQ986H82D642CT943SAT7432HADKQ753C7
+#2: SAQ985HT765DJ9CAJSKJT7H9DA8752C865S43HAQJ43DKQ3CQ73S62HK82DT64CKT942
+#3: SAQ5H8732D9652C74SKJT32HT9DQTCAK96S764HAQ6DAKJ73CJ8S98HKJ54D84CQT532
+  it "should convert from board hash to card array" do
+
+    ["11261300-1", "11261300-2", "11261300-3"].each do |hand_record_number|
+      file_name = "standalone_tests/files/card_array/" + hand_record_number + ".txt"
+			data = File.read(file_name)
+			@board = Hash.new
+			@board[:north] = data[ 0,17]
+			@board[:east]  = data[17,17]
+			@board[:south] = data[34,17]
+			@board[:west]  = data[51,17]
+
+      file_name = "standalone_tests/files/card_array/" + hand_record_number + "-e.txt"
+			expected_card_array_string = File.read(file_name)
+			expected_card_array_string.chomp!
+
+      card_array = HandRecordUtility.board_to_suits(@board)
+			card_array_string = card_array.join
+      comparison = HandRecordUtility.compare_card_array_string(card_array_string, expected_card_array_string)
+      expected = 0
+      expect(expected).to eq(comparison)
+    end
   end
 
 end
