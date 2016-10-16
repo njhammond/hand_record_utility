@@ -565,6 +565,98 @@ module HandRecordUtility
     pavlicek_arrays_to_board(nsew)
   end
 
+	####
+	# Boards to suits code
+	####
+	# Given a hand record in board format, return it in an array of 52 ints
+	# with 1=North, 2=East, 3=South, 4=West
+	# If a card is not assigned, it has the value of 0
+	def self.board_to_suits(board)
+		# Create new array, fill with 0
+		cards = Array.new(52, 0)
+		fill_out_cards_for_hand(cards, board[:north], 1)
+		fill_out_cards_for_hand(cards, board[:east],  2)
+		fill_out_cards_for_hand(cards, board[:south], 3)
+		fill_out_cards_for_hand(cards, board[:west],  4)
+		return cards
+	end
+
+	# Given a cards array(52), and a hand belonging to value, fill out the cards
+	def self.fill_out_cards_for_hand(cards_array, hand, value)
+		pattern = /S?([23456789TJQKA]*)H?([23456789TJQKA]*)D?([23456789TJQKA]*)C?([23456789TJQKA]*)/
+    suits = hand.split(pattern)[1..-1]
+    suits_size = suits.size
+    # If a club void, then the club suit is missing, so add back club void
+    # If diamond and club void fix that as well.
+    if (suits_size <= 3) then
+      (suits_size..3).each do |void|
+        suits << ""
+      end
+    end
+
+		suit_number = 0
+	  suits.each do |suit|
+			suit_start = suit_number * 13
+			suit.each_char do |card|
+				card_number = -1
+				case card
+				when "A"
+					card_number = 0
+				when "K"
+					card_number = 1
+				when "Q"
+					card_number = 2
+				when "J"
+					card_number = 3
+				when "T"
+					card_number = 4
+				else
+					card_number = (14 - card.to_i)
+				end
+				if (card_number >= 0) then	
+					i = suit_start + card_number
+					cards_array[i] = value
+				else
+					puts "Invalid value in HandRecordUtility.fill_out_cards_for_hand. card=#{card} hand=#{hand} value=#{value}"
+				end
+			end
+			suit_number = suit_number + 1
+		end
+	end
+
+	##########
+	# Helper code
+	##########
+
+  # Compare two card arrays
+  # Returns 0 on success, 1 on fails
+  def self.compare_card_array(old_card_array, new_card_array, is_strict = false, output_type = "puts")
+    routine_name = "compare_card_arrays"
+    old_size = old_card_array.size
+    new_size = new_card_array.size
+    if (old_size != new_size) then
+      if (output_type == "puts") then
+        puts "[#{routine_name}] sizes differ. Old size=#{old_size} New size=#{new_size}"
+      end
+      return 1
+    end
+
+		for i in 0..old_size-1
+			if (old_card_array[i] != new_card_array[i]) then
+				return 1
+			end
+		end
+    return 0
+  end
+
+  # Compare two card array strings
+  # Returns 0 on success, 1 on fails
+  def self.compare_card_array_string(old_card_array_string, new_card_array_string, is_strict = false, output_type = "puts")
+    routine_name = "compare_card_array_string"
+		return 0 if old_card_array_string == new_card_array_string
+		return 1
+  end
+
 	##########
 	# Hex code
 	##########
