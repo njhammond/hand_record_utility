@@ -7,4 +7,7 @@ Fri Oct 3, 2014, Version 1.0.1
 Fri Oct 3, 2014, Version 1.0.2
 				Nicolas added support for hex and base64.
 
+Sun Oct 16, 2016, Version 1.0.3
+				Nicolas added support for conversion from board format to string.
+
 
